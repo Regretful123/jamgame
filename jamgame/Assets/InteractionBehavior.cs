@@ -45,7 +45,7 @@ public class InteractionBehavior : MonoBehaviour {
         Vector3 currMousePos = Input.mousePosition;
         Vector3 OrgRotEul = orgRotation.eulerAngles;
         Vector3 DeltaPos = new Vector3( OrgRotEul.x + currMousePos.y - GameManager.PrevMousePosition.y,
-                                        OrgRotEul.y + currMousePos.x + GameManager.PrevMousePosition.x,
+                                        OrgRotEul.y + currMousePos.x - GameManager.PrevMousePosition.x,
                                         OrgRotEul.z + currMousePos.z - GameManager.PrevMousePosition.z);
         transform.rotation = Quaternion.Euler(DeltaPos);
 
