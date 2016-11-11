@@ -2,36 +2,53 @@
 using System.Collections;
 
 public class GameManager : MonoBehaviour {
-
-    private int scaleRatio = 4;
-    public GameObject obj_Background;
-
-    // find a way to spawn objects into array of list. 
-    // preferrably withhin the distance of the camera viewport. 
-
-
-    void Awake()
+    public static GameObject SelectedObject { get; private set; }
+    private static InteractionBehavior selectedBehav { get; set; }
+    public static Vector3 PrevMousePosition { get; private set; }
+    
+    public static void AssignSelectedObject( GameObject obj )
     {
-        //if (obj_Background == null )
-        Camera cam = Camera.main;
-        Vector3 TopRight = cam.ScreenToWorldPoint(new Vector3(0, cam.pixelHeight, cam.nearClipPlane));
-        Vector3 Bottomleft = cam.ScreenToWorldPoint(new Vector3(cam.pixelWidth, 0, cam.nearClipPlane));
-        
-        // shows the boundary of top left corner, and the width/height of the dimension
-        Vector4 bound = new Vector4( );
-
-        float sizeset = obj_Background.transform.localScale.magnitude * scaleRatio;
-
-        for ( int i = 0; i <  )
+        SelectedObject = obj;
+        if ( SelectedObject.GetComponent<InteractionBehavior>() != null)
+        {
+            selectedBehav = SelectedObject.GetComponent<InteractionBehavior>();
+        }
     }
 
-	// Use this for initialization
-	void Start () {
-	
-	}
+    public static void Deselect()
+    {
+        if( selectedBehav != null )
+        {
+            selectedBehav = null;
+        }
+        SelectedObject = null;
+    }
 	
 	// Update is called once per frame
 	void Update () {
-	
+        if( SelectedObject != null )
+        {
+
+            if( selectedBehav != null )
+            {
+                selectedBehav.UpdateRotation();
+            }
+        }
+
+        if( Input.GetButtonDown("Fire1"))
+        {
+            RaycastHit hit;
+            PrevMousePosition = Input.mousePosition;
+            Ray ray = Camera.main.ScreenPointToRay(PrevMousePosition);
+            
+            if (Physics.Raycast(ray, out hit))
+            {
+                AssignSelectedObject(hit.transform.gameObject);
+            }
+        }
+        else if ( Input.GetButtonUp("Fire1"))
+        {
+            Deselect();
+        }
 	}
 }
