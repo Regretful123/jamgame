@@ -1,83 +1,113 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-[RequireComponent(typeof(Rigidbody))]
-public class InteractionBehavior : MonoBehaviour {
-
-    public enum State { Increasing, Amass, Decreasing, Original }
-    public State state = State.Original;
-    public bool IsTouching;
-    private Vector3 orgScale;
-    private Quaternion orgRotation;
-    public float ScaleFactor = 3f;
-    public float duration = 0.5f;
-    public AnimationCurve AnimCurve = new AnimationCurve();
-    private float i;
-    private Rigidbody rb;
-
-    private float x;
-    private float y;
-
-    public bool returnToOriginalRotation;
-
-	// Use this for initialization
-	void Start ()
+namespace Jordan
+{
+    public class InteractionBehavior : MonoBehaviour
     {
-        orgScale = transform.localScale;
-        orgRotation = transform.rotation;
-        rb = GetComponent<Rigidbody>();
-    }
+        public bool IsTouching;
+        private Vector3 orgScale;
+        private Quaternion orgRotation;
+        private Quaternion targetRotation;
+        public float ScaleFactor = 3f;
+        public float duration = 0.5f;
+        public AnimationCurve AnimCurve = new AnimationCurve();
+        private float i;
+        public bool returnToOriginalRotation;
 
-    public void OnStartTouch()
-    {
-        IsTouching = true;
-    }
+        // Use this for initialization
+        void Start()
+        {
+            orgScale = transform.localScale;
+            orgRotation = transform.rotation;
+        }
 
-    public void OnEndTouch()
-    {
-        IsTouching = false;
-    }
+        /// <summary>
+        /// Return a better linear interpolate between two vectors without having to clamp between zero and one
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        private Vector3 Interpolate(Vector3 a, Vector3 b, float t)
+        {
+            return t * b + (1 - t) * a;
+        }
 
-    // rotate the object based from the camera orientation.. How??? Local space?
-    // what about angle forces? 
-    public void UpdateRotation()
-    {
-        Vector3 currMousePos = Input.mousePosition;
-        Vector3 OrgRotEul = orgRotation.eulerAngles;
-        Vector3 DeltaPos = new Vector3( OrgRotEul.x + currMousePos.y - GameManager.PrevMousePosition.y,
-                                        OrgRotEul.y + currMousePos.x - GameManager.PrevMousePosition.x,
-                                        OrgRotEul.z + currMousePos.z - GameManager.PrevMousePosition.z);
-        transform.rotation = Quaternion.Euler(DeltaPos);
+        // why won't this script work???
+        public void OnStartSelect()
+        {
+            // do nothing right now.
+        }
 
-    }
+        private float AngleSnap(float a )
+        {
+            // how do I use the step functions???
 
-	// Update is called once per frame
+            // first hting first make the float positive
+            a %= 360;
+            if (a < 0) a += 360f;
+
+            if (a >= 45 && a < 135) a = 90;
+            else if (a >= 135 && a < 225) a = 180;
+            else if (a >= 225 && a < 360) a = 270;
+            else a = 0;
+
+            return a;
+        }
+
+        public void OnEndSelect()
+        {
+            // make the cube faced correctly or face towards the world snapped.
+            Vector3 currRot = transform.localEulerAngles;
+            currRot.x = AngleSnap(currRot.x);
+            currRot.y = AngleSnap(currRot.y);
+            currRot.z = AngleSnap(currRot.z);
+            targetRotation = Quaternion.Euler(currRot);
+        }
+
+        // rotate the object based from the camera orientation.. How??? Local space??? The code below only works on local orientation!!! FUCK
+        // what about angle forces? 
+        public void UpdateRotation()
+        {
+            Vector3 currMousePos = Input.mousePosition;
+            float xOrt = currMousePos.x - GameManager.PrevMousePosition.x;
+            float yOrt = currMousePos.y - GameManager.PrevMousePosition.y;
+            transform.Rotate(-Vector3.up, xOrt, Space.World);
+            transform.Rotate(Vector3.right, yOrt, Space.World);
+            GameManager.PrevMousePosition = Input.mousePosition;
+        }
+
+        // Update is called once per frame
 
         // if we want the cube to return to it's original rotation then we need to add something in here that will help us utilize that.
-	void FixedUpdate ()
-    {
-        IsTouching = this.gameObject == GameManager.SelectedObject;
-        
-        // we would have to do a switch statement here. 
-        if( IsTouching )
+        void FixedUpdate()
         {
-            i += Time.fixedDeltaTime / duration;
-        }   
-        else
-        {
-            // return back to normal if possible
-            i -= Time.fixedDeltaTime / duration;
-            if ( returnToOriginalRotation )
+            IsTouching = gameObject == GameManager.SelectedObject;
+
+            // we would have to do a switch statement here. 
+            if (IsTouching)
             {
-                if( transform.rotation != orgRotation )
+                i += Time.fixedDeltaTime / duration;
+            }
+            else
+            {
+                // return back to normal if possible
+                i -= Time.fixedDeltaTime / duration;
+                if (returnToOriginalRotation)
                 {
-                    rb.angularVelocity = Vector3.zero;
-                    transform.rotation = Quaternion.Slerp(transform.rotation, orgRotation, Time.fixedDeltaTime * 10f);
+                    if (transform.rotation != orgRotation)
+                    {
+                        transform.rotation = Quaternion.Slerp(transform.rotation, orgRotation, Time.deltaTime * 10f);
+                    }
+                }
+                else
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
                 }
             }
-        }     
-        
-        i = Mathf.Clamp01(i);
-        transform.localScale = Vector3.Lerp(orgScale, orgScale * ScaleFactor, AnimCurve.Evaluate(i));
+
+            i = Mathf.Clamp01(i);
+            transform.localScale = Interpolate(orgScale, orgScale * ScaleFactor, AnimCurve.Evaluate(i));
+        }
     }
 }
