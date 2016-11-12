@@ -7,25 +7,8 @@ namespace Jordan
         public static GameObject SelectedObject { get; private set; }
         private static InteractionBehavior selectedBehav { get; set; }
         public static Vector3 PrevMousePosition { get; set; }
-
-        //public delegate void OnEndSelect(object sender, GameObject e);
-        //public delegate void OnStartSelect(object sender, GameObject e);
         private static GameManager instance;
         public static GameManager Instance { get { return instance ?? new GameObject("GameManager").AddComponent<GameManager>(); } }
-        //public event OnEndSelect EndSelected;
-        //public event OnStartSelect StartSelected;
-
-        //protected void NotifyStartSelectedEvent(GameObject obj)
-        //{
-        //    if (StartSelected != null)
-        //    { StartSelected(this, obj); }
-        //}
-
-        //protected void NotifyEndSelectedEvent(GameObject obj)
-        //{
-        //    if (EndSelected != null)
-        //    { EndSelected(this, obj); }
-        //}
 
         protected void Start()
         {
@@ -41,8 +24,6 @@ namespace Jordan
                 selectedBehav = SelectedObject.GetComponent<InteractionBehavior>();
                 selectedBehav.OnStartSelect();
             }
-                
-            //Instance.NotifyStartSelectedEvent(SelectedObject);
         }
 
         public static void Deselect()
@@ -52,7 +33,6 @@ namespace Jordan
                 selectedBehav.OnEndSelect();
                 selectedBehav = null;
             }
-            //Instance.NotifyEndSelectedEvent(SelectedObject);
             SelectedObject = null;
         }
 

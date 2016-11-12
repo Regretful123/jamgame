@@ -33,7 +33,6 @@ namespace Jordan
             return t * b + (1 - t) * a;
         }
 
-        // why won't this script work???
         public void OnStartSelect()
         {
             // do nothing right now.
@@ -41,18 +40,7 @@ namespace Jordan
 
         private float AngleSnap(float a )
         {
-            // how do I use the step functions???
-
-            // first hting first make the float positive
-            a %= 360;
-            if (a < 0) a += 360f;
-
-            if (a >= 45 && a < 135) a = 90;
-            else if (a >= 135 && a < 225) a = 180;
-            else if (a >= 225 && a < 360) a = 270;
-            else a = 0;
-
-            return a;
+            return Mathf.Round(a/90) * 90;
         }
 
         public void OnEndSelect()
