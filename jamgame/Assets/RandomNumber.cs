@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class RandomNumber : MonoBehaviour {
 
-    private enum Side { Top = 0, Bottom, Left, Right, Front, Back }
+    private enum Side { Top = 0, Bottom=1, Left = 2, Right = 3, Front = 4, Back = 5 }
     private Side selectedSide;
     public GameObject top;
     public GameObject bottom;
@@ -11,21 +11,21 @@ public class RandomNumber : MonoBehaviour {
     public GameObject right;
     public GameObject front;
     public GameObject back;
-    private GameObject[] numObj = new GameObject[5];
-    private Transform[] sidePos = new Transform[5];
-
-
-    void Enabled()
+    private GameObject[] numObj = new GameObject[6];
+    private Transform[] sidePos = new Transform[6];
+    private List<int> numDef = new List<int>();
+    public List<int> NumberDeclared { get { return numDef; } }
+    private int TryFail = 0;
+    private const int MaxTryBeforeFail = 10;
+    
+    /// <summary>
+    /// Generate a random number range between 0 and 10
+    /// </summary>
+    private int GetRandomRange
     {
-        Start();
+        get { return (int)Random.Range(0, 10); }
     }
 
-    private string GetRandomRange
-    {
-        get { return ((int)Random.Range(1, 10)).ToString(); }
-    }
-
-    // Use this for initialization
     void Start ()
     {
         sidePos[(int)Side.Top] = top.transform;
@@ -35,44 +35,57 @@ public class RandomNumber : MonoBehaviour {
         sidePos[(int)Side.Front] = front.transform;
         sidePos[(int)Side.Back] = back.transform;
 
-        for (int i = 0; i < 5; i++)
-        {
-            if (numObj[i] != null)
-            {
-                Destroy(numObj[i]);
-            }
-
-            numObj[i] = (GameObject)Instantiate(Resources.Load(GetRandomRange),sidePos[i].position, 
-        }
-
-
-        numObj[(int)Side.Top] = (GameObject)Instantiate(Resources.Load(GetRandomRange), top.transform.position, top.transform.rotation);
-        numObj[(int)Side.Bottom] = (GameObject)Instantiate(Resources.Load(GetRandomRange), bottom.transform.position, bottom.transform.rotation);
-        numObj[(int)Side.Left] = (GameObject)Instantiate(Resources.Load(GetRandomRange), left.transform.position, left.transform.rotation);
-        numObj[(int)Side.Right] = (GameObject)Instantiate(Resources.Load(GetRandomRange), right.transform.position, right.transform.rotation);
-        numObj[(int)Side.Front] = (GameObject)Instantiate(Resources.Load(GetRandomRange), front.transform.position, front.transform.rotation);
-        numObj[(int)Side.Back] = (GameObject)Instantiate(Resources.Load(GetRandomRange), back.transform.position, back.transform.rotation);
-
-        numObj[(int)Side.Top].transform.parent = top.transform;
-        numObj[(int)Side.Bottom].transform.parent = bottom.transform;
-
+        GenerateNumbers();
     }
-    
-    public int GetSelectedNumber()
+
+    /// <summary>
+    ///  this may be used to help regenerate number in case of something goes wrong or there's unsolvable solution occurred.
+    /// </summary>
+    public void GenerateNumbers()
     {
-        // first thing first find the object closest to the camera.
-        float maxDist = Mathf.Infinity;
-        int objSel = -1;
+        numDef.Clear(); // clear the current list of active numbers
         for (int i = 0; i < numObj.Length; i++)
         {
-            float dist = Vector3.Distance(Camera.main.transform.position, numObj[i].transform.position);
-            if ( dist < maxDist )
-            {
-                objSel = i;
-                maxDist = dist;
-            }
-        }
+            if (numObj[i] != null) { Destroy(numObj[i]); }
+            int r = GetRandomRange;
 
-        return int.Parse(numObj[objSel].name ?? "0");
+            // seems dangerous but as long as I have the try fail exception. 
+            while (numDef.IndexOf(r) != -1)
+            {
+                if (MaxTryBeforeFail < TryFail) { break; }
+                TryFail++;
+                r = GetRandomRange;
+            }
+
+            TryFail = 0;
+            numDef.Add(r);
+            numObj[i] = (GameObject)Instantiate(Resources.Load(r.ToString()), sidePos[i].position, sidePos[i].rotation);
+            numObj[i].transform.parent = sidePos[i];
+            numObj[i].tag = r.ToString();
+        }
+    }
+    
+    /// <summary>
+    /// Returns the number that is the closest to the camera. (Selected number if possible)
+    /// </summary>
+    public int GetSelectedNumber
+    {
+        get
+        {   // first thing first find the object closest to the camera.
+            float maxDist = Mathf.Infinity;
+            int objSel = -1;
+            for (int i = 0; i < numObj.Length; i++)
+            {
+                // don't know why, don't care, wanted to make sure it works, either way it'll roll back to zero.
+                if (numObj[i] == null) continue;
+                float dist = Vector3.Distance(Camera.main.transform.position, numObj[i].transform.position);
+                if (dist < maxDist)
+                {
+                    objSel = i;
+                    maxDist = dist;
+                }
+            }
+            return objSel == -1 ? 0 : (int.Parse(numObj[objSel].tag ?? "0"));
+        }
     }
 }

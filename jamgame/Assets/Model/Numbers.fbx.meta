@@ -112,6 +112,7 @@ ModelImporter:
     100208: transform46
     100210: transform47
     100212: transform48
+    100214: Number_10
     400000: Number_0
     400002: Number_1
     400004: Number_2
@@ -219,6 +220,7 @@ ModelImporter:
     400208: transform46
     400210: transform47
     400212: transform48
+    400214: Number_10
     2300000: Number_0
     2300002: Number_1
     2300004: Number_2
@@ -236,6 +238,7 @@ ModelImporter:
     2300028: pCube27
     2300030: pCube28
     2300032: Number_8
+    2300034: Number_10
     3300000: Number_0
     3300002: Number_1
     3300004: Number_2
@@ -253,6 +256,7 @@ ModelImporter:
     3300028: pCube27
     3300030: pCube28
     3300032: Number_8
+    3300034: Number_10
     4300000: Number_0
     4300002: Number_1
     4300004: Number_2
@@ -270,6 +274,7 @@ ModelImporter:
     4300028: Number_7
     4300030: Number_5
     4300032: Number_8
+    4300034: Number_10
     9500000: //RootNode
   materials:
     importMaterials: 1

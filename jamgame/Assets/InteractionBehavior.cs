@@ -13,12 +13,15 @@ namespace Jordan
         public AnimationCurve AnimCurve = new AnimationCurve();
         private float i;
         public bool returnToOriginalRotation;
+        private RandomNumber _randNumberBehavior;
+        public ResultChecker rc { private get; set; } 
 
         // Use this for initialization
         void Start()
         {
             orgScale = transform.localScale;
             orgRotation = transform.rotation;
+            _randNumberBehavior = this.GetComponent<RandomNumber>();
         }
 
         /// <summary>
@@ -40,7 +43,7 @@ namespace Jordan
 
         private float AngleSnap(float a )
         {
-            return Mathf.Round(a/90) * 90;
+            return Mathf.Round( a / 90 ) * 90;
         }
 
         public void OnEndSelect()
@@ -51,23 +54,21 @@ namespace Jordan
             currRot.y = AngleSnap(currRot.y);
             currRot.z = AngleSnap(currRot.z);
             targetRotation = Quaternion.Euler(currRot);
+            // with the reference script, we'll validate and vouch if the number result equals to number 10 in the game.
+            // then we will determine whether the cube is aligned correctly.
+            if( rc != null )
+                rc.CheckResult();
         }
 
-        // rotate the object based from the camera orientation.. How??? Local space??? The code below only works on local orientation!!! FUCK
-        // what about angle forces? 
+        // rotate the object based from the camera orientation. thought about making the cube has it's own angle velocity, but then it would defeat the purpose of this game.
         public void UpdateRotation()
         {
-            Vector3 currMousePos = Input.mousePosition;
-            float xOrt = currMousePos.x - GameManager.PrevMousePosition.x;
-            float yOrt = currMousePos.y - GameManager.PrevMousePosition.y;
-            transform.Rotate(-Vector3.up, xOrt, Space.World);
-            transform.Rotate(Vector3.right, yOrt, Space.World);
+            Vector3 currMousePos = Input.mousePosition - GameManager.PrevMousePosition;
+            Vector3 rotTo = ( -Vector3.up * currMousePos.x) + ( Vector3.right * currMousePos.y);
+            transform.Rotate(rotTo, Space.World);
             GameManager.PrevMousePosition = Input.mousePosition;
         }
-
-        // Update is called once per frame
-
-        // if we want the cube to return to it's original rotation then we need to add something in here that will help us utilize that.
+        
         void FixedUpdate()
         {
             IsTouching = gameObject == GameManager.SelectedObject;
